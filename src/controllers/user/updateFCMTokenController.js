@@ -1,3 +1,5 @@
+const User = require('../../models/User'); 
+
 const logger = require('../../utils/logger');
 
 exports.updateFCMToken = async (req, res) => {

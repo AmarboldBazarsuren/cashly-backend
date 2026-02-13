@@ -113,7 +113,7 @@ const sendPaymentReminders = cron.schedule('0 10 * * *', async () => {
     tomorrow.setDate(tomorrow.getDate() + 1);
 
     // Маргааш дуусах зээлүүд
-    const duetomorrow = await Loan.find({
+    const dueTomorrow  = await Loan.find({
       status: { $in: ['active', 'extended'] },
       dueDate: {
         $gte: today,
@@ -134,7 +134,7 @@ const sendPaymentReminders = cron.schedule('0 10 * * *', async () => {
       logger.info(`Payment reminder sent: Loan ${loan._id}`);
     }
 
-    logger.info(`Payment reminders completed: ${dueTransaction.length} notifications sent`);
+logger.info(`Payment reminders completed: ${dueTomorrow.length} notifications sent`);
   } catch (error) {
     logger.error('Payment reminders error:', error);
   }
