@@ -1,11 +1,13 @@
 /**
  * Wallet Model - Хэрэглэгчийн хэтэвч
+ * БАЙРШИЛ: src/models/Wallet.js
  * Мөнгөн үлдэгдэл, цэнэглэлт, зарлага
  */
 
 const mongoose = require('mongoose');
 
 const walletSchema = new mongoose.Schema({
+  // ✅ unique:true хэвээр байна, гэхдээ доор schema.index()-д давхардуулж бичихгүй
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
@@ -20,7 +22,7 @@ const walletSchema = new mongoose.Schema({
     min: 0
   },
 
-  // Түгжигдсэн мөнгө (pending transactions)
+  // Түгжигдсэн мөнгө (pending withdrawal)
   frozenBalance: {
     type: Number,
     default: 0,
@@ -41,7 +43,7 @@ const walletSchema = new mongoose.Schema({
     min: 0
   },
 
-  // Валют (Одоогоор зөвхөн MNT)
+  // Валют
   currency: {
     type: String,
     default: 'MNT',
@@ -52,30 +54,20 @@ const walletSchema = new mongoose.Schema({
   lastDepositAt: Date,
 
   // Сүүлд татсан огноо
-  lastWithdrawalAt: Date,
+  lastWithdrawalAt: Date
 
-  // Timestamps
-  createdAt: {
-    type: Date,
-    default: Date.now
-  },
-  updatedAt: {
-    type: Date,
-    default: Date.now
-  }
 }, {
   timestamps: true
 });
 
-// Index
-walletSchema.index({ user: 1 });
+// ✅ user field нь schema дотор unique:true тул давхардуулж бичихгүй - warning арилна
 
-// Хэтэвчний үлдэгдэл шалгах method
+// Хэтэвчний үлдэгдэл шалгах
 walletSchema.methods.hasBalance = function(amount) {
   return this.balance >= amount;
 };
 
-// Боломжит үлдэгдэл (нийт - түгжигдсэн)
+// Боломжит үлдэгдэл
 walletSchema.virtual('availableBalance').get(function() {
   return this.balance - this.frozenBalance;
 });

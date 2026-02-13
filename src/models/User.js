@@ -1,5 +1,6 @@
 /**
  * User Model - Хэрэглэгчийн бүх мэдээлэл
+ * БАЙРШИЛ: src/models/User.js
  * Бүртгэл, хувийн мэдээлэл, KYC verification
  */
 
@@ -8,6 +9,7 @@ const bcrypt = require('bcryptjs');
 
 const userSchema = new mongoose.Schema({
   // Үндсэн мэдээлэл
+  // ✅ unique:true хэвээр байна, гэхдээ доор schema.index()-д давхардуулж бичихгүй
   phoneNumber: {
     type: String,
     required: [true, 'Утасны дугаар шаардлагатай'],
@@ -19,7 +21,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Нууц үг шаардлагатай'],
     minlength: 6,
-    select: false // Query-д автоматаар ороогүй
+    select: false
   },
   name: {
     type: String,
@@ -30,19 +32,16 @@ const userSchema = new mongoose.Schema({
     type: String,
     trim: true,
     lowercase: true,
-    sparse: true // Unique боловч null байж болно
+    sparse: true
   },
 
   // Хувийн мэдээлэл - KYC
   personalInfo: {
-    // Боловсрол
     education: {
       type: String,
       enum: ['Бага', 'Дунд', 'Тусгай дунд', 'Бакалавр', 'Магистр', 'Доктор', ''],
       default: ''
     },
-    
-    // Ажил эрхлэлт
     employment: {
       status: {
         type: String,
@@ -53,8 +52,6 @@ const userSchema = new mongoose.Schema({
       position: String,
       monthlyIncome: Number
     },
-
-    // Амьдарч буй хаяг
     address: {
       city: String,
       district: String,
@@ -63,12 +60,12 @@ const userSchema = new mongoose.Schema({
       apartment: String,
       fullAddress: String
     },
-
-    // Банкны мэдээлэл
     bankInfo: {
       bankName: {
         type: String,
-        enum: ['Хаан банк', 'Төрийн банк', 'Голомт банк', 'Хас банк', 'Капитрон банк', 'Ариг банк', 'Богд банк', 'Чингис хаан банк', 'Худалдаа хөгжлийн банк', 'Үндэсний хөрөнгө оруулалтын банк', '']
+        enum: ['Хаан банк', 'Төрийн банк', 'Голомт банк', 'Хас банк', 'Капитрон банк',
+               'Ариг банк', 'Богд банк', 'Чингис хаан банк', 'Худалдаа хөгжлийн банк',
+               'Үндэсний хөрөнгө оруулалтын банк', '']
       },
       accountNumber: {
         type: String,
@@ -76,29 +73,19 @@ const userSchema = new mongoose.Schema({
       },
       accountName: String
     },
-
-    // Холбоо барих хүмүүс
     emergencyContacts: [{
-      name: {
-        type: String,
-        required: true
-      },
-      relationship: {
-        type: String,
-        required: true
-      },
+      name: { type: String, required: true },
+      relationship: { type: String, required: true },
       phoneNumber: {
         type: String,
         required: true,
         match: [/^[0-9]{8}$/, 'Утасны дугаар 8 оронтой байх ёстой']
       }
     }],
-
-    // Иргэний үнэмлэхний зургууд
     documents: {
       idCardFront: {
         url: String,
-        publicId: String, // Cloudinary public_id
+        publicId: String,
         uploadedAt: Date
       },
       idCardBack: {
@@ -112,8 +99,6 @@ const userSchema = new mongoose.Schema({
         uploadedAt: Date
       }
     },
-
-    // Регистрийн дугаар
     registerNumber: {
       type: String,
       trim: true,
@@ -132,14 +117,14 @@ const userSchema = new mongoose.Schema({
   kycApprovedAt: Date,
   kycRejectedReason: String,
 
-  // Зээлийн эрх шалгах төлбөр төлсөн эсэх
+  // Зээлийн эрх шалгах төлбөр
   creditCheckPaid: {
     type: Boolean,
     default: false
   },
   creditCheckPaidAt: Date,
 
-  // Зээлийн эрх (limit)
+  // Зээлийн эрх
   creditLimit: {
     type: Number,
     default: 0,
@@ -158,7 +143,7 @@ const userSchema = new mongoose.Schema({
     default: 'active'
   },
 
-  // Өмнөх зээлийн түүх (credit score тооцоход ашиглана)
+  // Credit score
   creditScore: {
     type: Number,
     default: 0,
@@ -169,7 +154,7 @@ const userSchema = new mongoose.Schema({
   // Push notification токен
   fcmToken: String,
 
-  // Referral code
+  // Referral
   referralCode: {
     type: String,
     unique: true,
@@ -180,38 +165,27 @@ const userSchema = new mongoose.Schema({
     ref: 'User'
   },
 
-  // Timestamps
-  lastLogin: Date,
-  createdAt: {
-    type: Date,
-    default: Date.now
-  },
-  updatedAt: {
-    type: Date,
-    default: Date.now
-  }
+  lastLogin: Date
+
 }, {
   timestamps: true
 });
 
-// Index - хурдан хайлтын тулд
-userSchema.index({ phoneNumber: 1 });
+// ✅ Index - зөвхөн хайлтад ашиглагдах field-үүд
+// phoneNumber, referralCode нь schema дотор unique:true тул давхардуулж бичихгүй
 userSchema.index({ kycStatus: 1 });
 userSchema.index({ creditCheckPaid: 1 });
 userSchema.index({ status: 1 });
 
-// Password hash хийх middleware
+// Password hash
 userSchema.pre('save', async function(next) {
-  if (!this.isModified('password')) {
-    return next();
-  }
-  
+  if (!this.isModified('password')) return next();
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
   next();
 });
 
-// Password шалгах method
+// Password шалгах
 userSchema.methods.matchPassword = async function(enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };

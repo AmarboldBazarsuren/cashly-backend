@@ -1,6 +1,7 @@
 /**
  * Transaction Model - Бүх гүйлгээний түүх
- * Цэнэглэлт, зарлага, төлбөр
+ * БАЙРШИЛ: src/models/Transaction.js
+ * Цэнэглэлт, зарлага, зээлийн төлбөр
  */
 
 const mongoose = require('mongoose');
@@ -12,7 +13,7 @@ const transactionSchema = new mongoose.Schema({
     required: true
   },
 
-  // Гүйлгээний дугаар
+  // ✅ unique:true хэвээр, гэхдээ доор schema.index()-д давхардуулж бичихгүй
   transactionId: {
     type: String,
     unique: true,
@@ -93,7 +94,7 @@ const transactionSchema = new mongoose.Schema({
     enum: ['qpay', 'bank_transfer', 'card', 'social_pay', 'admin', '']
   },
 
-  // Reference number (төлбөрийн баталгаа)
+  // Reference number
   referenceNumber: String,
 
   // Admin action
@@ -110,19 +111,14 @@ const transactionSchema = new mongoose.Schema({
     userAgent: String
   },
 
-  // Timestamps
-  createdAt: {
-    type: Date,
-    default: Date.now
-  },
   completedAt: Date
+
 }, {
   timestamps: true
 });
 
-// Index
+// ✅ Index - transactionId нь schema дотор unique:true тул давхардуулж бичихгүй
 transactionSchema.index({ user: 1, createdAt: -1 });
-transactionSchema.index({ transactionId: 1 });
 transactionSchema.index({ type: 1, status: 1 });
 transactionSchema.index({ loan: 1 });
 

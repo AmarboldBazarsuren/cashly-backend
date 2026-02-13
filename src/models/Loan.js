@@ -1,5 +1,6 @@
 /**
  * Loan Model - Зээлийн мэдээлэл
+ * БАЙРШИЛ: src/models/Loan.js
  * 14, 21, 90 хоногийн зээл, хүү, сунгалт
  */
 
@@ -12,7 +13,7 @@ const loanSchema = new mongoose.Schema({
     required: true
   },
 
-  // Зээлийн дугаар (автоматаар үүсэх)
+  // Зээлийн дугаар (автоматаар үүсэх) - index нь доор schema.index()-д тодорхойлогдсон
   loanNumber: {
     type: String,
     unique: true
@@ -63,14 +64,14 @@ const loanSchema = new mongoose.Schema({
     ref: 'Admin'
   },
   approvedAt: Date,
-  
+
   rejectedReason: String,
   rejectedAt: Date,
 
   // Зээл олгосон огноо (хэтэвчинд орсон)
   disbursedAt: Date,
 
-  // Эхлэх огноо (хэтэвчээс татсан)
+  // Эхлэх огноо
   startDate: Date,
 
   // Дуусах огноо
@@ -153,24 +154,16 @@ const loanSchema = new mongoose.Schema({
   },
 
   // Тэмдэглэл (admin-аас)
-  adminNotes: String,
+  adminNotes: String
 
-  // Timestamps
-  createdAt: {
-    type: Date,
-    default: Date.now
-  },
-  updatedAt: {
-    type: Date,
-    default: Date.now
-  }
 }, {
   timestamps: true
 });
 
-// Index - хайлт хурдасгах
+// ✅ Index - давхардлаас зайлсхийхийн тулд зөвхөн schema.index()-д тодорхойлно
+// (field дотор index:true болон unique:true аль аль нь байхгүй)
 loanSchema.index({ user: 1, status: 1 });
-loanSchema.index({ loanNumber: 1 });
+loanSchema.index({ loanNumber: 1 }, { unique: true });
 loanSchema.index({ status: 1 });
 loanSchema.index({ dueDate: 1 });
 
@@ -199,10 +192,10 @@ loanSchema.statics.calculateInterest = function(principal, term) {
     default:
       rate = 2.4;
   }
-  
+
   const interestAmount = Math.round(principal * (rate / 100));
   const totalAmount = principal + interestAmount;
-  
+
   return {
     interestRate: rate,
     interestAmount,
