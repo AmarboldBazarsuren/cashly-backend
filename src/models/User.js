@@ -103,8 +103,7 @@ const userSchema = new mongoose.Schema({
       type: String,
       trim: true,
       uppercase: true,
-      match: [/^[А-ЯӨҮ]{2}[0-9]{8}$/, 'Регистр буруу байна']
-    }
+}
   },
 
   // KYC Статус
